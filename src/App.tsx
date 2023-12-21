@@ -6,9 +6,9 @@ import Test from "./pages/Test";
 function App() {
   return (
     <>
-      <Test />
-      {/* <ImageObjectDetection />
-      <VideoObjectDetection /> */}
+      {/* <Test /> */}
+      <ImageObjectDetection />
+      {/* <VideoObjectDetection /> */}
     </>
   );
 }

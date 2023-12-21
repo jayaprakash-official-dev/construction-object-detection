@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as tf from "@tensorflow/tfjs";
-import { Col, Container, Form, Row, Spinner } from "react-bootstrap";
+import { Col, Container, Form, Row, Spinner } from "react-bootstrap"
+;
 function Test() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [model, setModel] = useState<tf.GraphModel<string | tf.io.IOHandler>>();
   const imageRef = useRef<any>(null);
-  const [file, setFile] = useState<string>();
   const [isNewOdModel, setIsNewOdModel] = useState<boolean>();
   const NEW_OD_OUTPUT_TENSORS = [
     "detected_boxes",
@@ -32,8 +32,8 @@ function Test() {
 
   const showProgress = (percentage: number) => {
     var pct = Math.floor(percentage * 100.0);
-    console.log('pct',pct);
-    
+    console.log("pct", pct);
+
     if (pct === 100) {
       setIsLoading(false);
     }
@@ -42,12 +42,10 @@ function Test() {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setFile(URL.createObjectURL(file));
       let reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = function () {
         imageRef.current.src = reader.result;
-        loadImage();
       };
       reader.onerror = function (error) {
         console.log("Error: ", error);
@@ -78,24 +76,24 @@ function Test() {
       image = isNewOdModel ? image : image.reverse(-1); // RGB->BGR for old models
     }
     console.log("image", image);
-    const predict = await predictLogos(image);
-    console.log("predict", predict);
-    await highlightResults(predict);
 
-    // return image;
+    return image;
   };
 
   const predictLogos = async (image: any) => {
     console.log("Running predictions...", image, isNewOdModel);
     if (model) {
+      console.log("imageimageimageimageimage", image);
+
       const outputs = await model.executeAsync(
         image,
         isNewOdModel ? NEW_OD_OUTPUT_TENSORS : undefined
       );
+
       console.log("outputs", outputs);
 
       const arrays = !Array.isArray(outputs)
-        ? outputs.array()
+        ? await outputs.array()
         : Promise.all(outputs.map((t) => t.array()));
       let predictions: any = await arrays;
       console.log("arrays", predictions);
@@ -186,26 +184,26 @@ function Test() {
     }
   };
 
-  async function highlightResults(predictions: any) {
+  const highlightResults = async (predictions: any) => {
     console.log("Highlighting results...");
 
     // Assuming you have defined TARGET_CLASSES and selectedImage somewhere in your code
     const TARGET_CLASSES = ["Class1", "Class2", "Class3"]; // Replace with your actual class names
     const selectedImage = imageRef.current;
     const imageOverlay = document.getElementById("imageOverlay");
-    console.log("imageOverlay", imageOverlay);
 
+    console.log("imageOverlay", imageOverlay);
     // Assuming you have defined bboxLeft, bboxTop, bboxWidth, and bboxHeight
     let bboxLeft, bboxTop, bboxWidth, bboxHeight;
 
     // Remove existing highlights
-    // removeHighlights();
 
     for (let n = 0; n < predictions[0].length; n++) {
       console.log("predictions[1][n]", predictions[1][n]);
 
       // Check scores
       if (predictions[1][n] > 0.66) {
+        console.log("predictions[1][n] > 0.66", predictions[1][n]);
         const p = document.createElement("p");
         p.innerText =
           TARGET_CLASSES[predictions[2][n]] +
@@ -235,7 +233,7 @@ function Test() {
         }
       }
     }
-  }
+  };
 
   const _logistic = (x: number) => {
     if (x > 0) {
@@ -244,6 +242,14 @@ function Test() {
       const e = Math.exp(x);
       return e / (1 + e);
     }
+  };
+
+  const Predict = async () => {
+    const image = await loadImage();
+    console.log("image FINAL", image);
+    const predict = await predictLogos(image);
+    console.log("predict FINAL", predict);
+    await highlightResults(predict);
   };
 
   return (
@@ -275,13 +281,22 @@ function Test() {
               <div className="row">
                 <div className="col-12">
                   <h2 className="ml-3">Image</h2>
+                  <div className="col-6">
+                    <button
+                      onClick={() => Predict()}
+                      id="predict-button"
+                      className="btn btn-primary float-right"
+                    >
+                      Predict
+                    </button>
+                  </div>
                   <div id="imageOverlay" className="imageOverlay">
                     <img
                       ref={imageRef}
                       id="selectedImage"
                       className="ml-3"
                       width="500"
-                      height="height"
+                      height="auto"
                       alt=""
                       src={
                         imageRef.current && imageRef.current.src
